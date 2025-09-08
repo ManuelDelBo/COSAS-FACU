@@ -1,0 +1,7 @@
+# depslib dependency file v1.0
+1716835543 source:c:\users\marcos\downloads\ejemplosemaforoshilos\ejemplosemaforoshilos\main.c
+	<pthread.h>
+	<stdio.h>
+	<semaphore.h>
+	<windows.h>
+

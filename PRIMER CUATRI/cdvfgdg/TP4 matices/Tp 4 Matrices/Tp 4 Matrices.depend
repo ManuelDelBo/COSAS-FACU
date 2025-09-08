@@ -1,0 +1,17 @@
+# depslib dependency file v1.0
+1743466508 source:c:\users\manue\onedrive\desktop\manu\utn\programacion 1\tp 4 matices\tp 4 matrices\main.c
+	<stdio.h>
+	<stdlib.h>
+	<time.h>
+	<string.h>
+	<ctype.h>
+	<conio.h>
+
+1743982007 source:c:\users\nano\desktop\cosas facu\utn\programacion 1\tp4 matices\tp 4 matrices\main.c
+	<stdio.h>
+	<stdlib.h>
+	<time.h>
+	<string.h>
+	<ctype.h>
+	<conio.h>
+

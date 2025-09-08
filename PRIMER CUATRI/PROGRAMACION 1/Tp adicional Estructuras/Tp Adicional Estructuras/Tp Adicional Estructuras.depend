@@ -1,0 +1,6 @@
+# depslib dependency file v1.0
+1745624175 source:c:\users\manue\onedrive\desktop\manu\utn\programacion 1\tp adicional estructuras\tp adicional estructuras\main.c
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+

@@ -1,0 +1,17 @@
+# depslib dependency file v1.0
+1740506010 source:c:\users\nano\desktop\cosas facu\utn\programacion 1\pila.c
+	"pila.h"
+
+1740506010 c:\users\nano\desktop\cosas facu\utn\programacion 1\pila.h
+	<stdio.h>
+	<malloc.h>
+
+1751760172 source:c:\users\nano\desktop\cosas facu\utn\programacion 1\practica final - parcial 1\main.c
+	<stdio.h>
+	<stdlib.h>
+	<strings.h>
+	<conio.h>
+	"../pila.h"
+	<time.h>
+	<ctype.h>
+

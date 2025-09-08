@@ -1,0 +1,6 @@
+# depslib dependency file v1.0
+1748286136 source:c:\users\nano\desktop\cosas facu\utn\programacion 1\tp6 estructuras\main.c
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+

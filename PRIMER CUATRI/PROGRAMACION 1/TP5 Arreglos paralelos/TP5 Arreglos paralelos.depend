@@ -1,0 +1,6 @@
+# depslib dependency file v1.0
+1748126065 source:c:\users\nano\desktop\cosas facu\utn\programacion 1\tp5 arreglos paralelos\main.c
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+

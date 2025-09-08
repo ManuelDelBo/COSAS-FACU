@@ -1,0 +1,21 @@
+# depslib dependency file v1.0
+1740506010 source:c:\users\nano\desktop\cosas facu\utn\programacion 1\pila.c
+	"pila.h"
+
+1740506010 c:\users\nano\desktop\cosas facu\utn\programacion 1\pila.h
+	<stdio.h>
+	<malloc.h>
+
+1751770530 source:c:\users\nano\desktop\cosas facu\utn\programacion 1\practica final - parcial 1 este si\main.c
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+	<time.h>
+	"../pila.h"
+	"miLibreria.h"
+
+1744670044 c:\users\nano\desktop\cosas facu\utn\programacion 1\practica final - parcial 1 este si\milibreria.h
+
+1744673221 source:c:\users\nano\desktop\cosas facu\utn\programacion 1\practica final - parcial 1 este si\milibreria.c
+	<stdio.h>
+

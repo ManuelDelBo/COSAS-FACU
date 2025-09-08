@@ -1,0 +1,6 @@
+# depslib dependency file v1.0
+1741977614 source:c:\users\nano\desktop\cosas facu\utn\programacion 1\tp1\main.c
+	<stdio.h>
+	<stdlib.h>
+	<time.h>
+

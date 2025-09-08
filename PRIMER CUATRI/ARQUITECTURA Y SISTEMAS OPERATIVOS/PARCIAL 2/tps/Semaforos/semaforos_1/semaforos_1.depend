@@ -1,0 +1,8 @@
+# depslib dependency file v1.0
+1716832996 source:c:\users\nano\desktop\cosas facu\utn\arquitectura y sistemas operativos\parcial 2\tps\semaforos\semaforos_1\main.c
+	<stdio.h>
+	<stdlib.h>
+	<unistd.h>
+	<semaphore.h>
+	<pthread.h>
+

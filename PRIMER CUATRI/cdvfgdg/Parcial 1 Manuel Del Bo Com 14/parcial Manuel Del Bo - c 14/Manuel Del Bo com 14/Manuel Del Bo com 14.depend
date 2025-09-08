@@ -1,0 +1,23 @@
+# depslib dependency file v1.0
+1744673221 source:c:\users\manue\downloads\milibreria.c
+	<stdio.h>
+
+1744670042 source:c:\users\manue\downloads\pila.c
+	"pila.h"
+
+1744670043 c:\users\manue\downloads\pila.h
+	<stdio.h>
+	<malloc.h>
+
+1744678110 source:c:\users\manue\downloads\parcial manuel del bo - c 14\manuel del bo com 14\main.c
+	<stdio.h>
+	<stdlib.h>
+	"../../pila.h"
+	"../../miLibreria.h"
+	<time.h>
+	<string.h>
+	<conio.h>
+	<ctype.h>
+
+1744670044 c:\users\manue\downloads\milibreria.h
+

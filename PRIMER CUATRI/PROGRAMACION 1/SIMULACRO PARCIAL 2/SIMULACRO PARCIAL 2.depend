@@ -1,0 +1,6 @@
+# depslib dependency file v1.0
+1749239652 source:c:\users\nano\desktop\cosas facu\utn\programacion 1\simulacro parcial 2\main.c
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+

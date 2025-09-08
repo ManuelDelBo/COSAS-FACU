@@ -1,0 +1,8 @@
+# depslib dependency file v1.0
+1748922526 source:c:\users\nano\desktop\cosas facu\utn\arquitectura y sistemas operativos\parcial 2\tps\tp2 semaforos\main.c
+	<stdio.h>
+	<stdlib.h>
+	<semaphore.h>
+	<pthread.h>
+	<unistd.h>
+

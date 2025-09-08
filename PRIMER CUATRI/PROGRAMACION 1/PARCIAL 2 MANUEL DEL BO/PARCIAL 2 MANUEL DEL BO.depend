@@ -1,0 +1,6 @@
+# depslib dependency file v1.0
+1749257024 source:c:\users\manue\downloads\parcial 2 manuel del bo\main.c
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+
