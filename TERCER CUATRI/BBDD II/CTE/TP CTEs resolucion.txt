@@ -1,0 +1,116 @@
+1---------------------------------------------------------------------------
+WITH VentasAltas AS (
+    SELECT *
+    FROM Ventas
+    WHERE valor > 1000
+)
+SELECT COUNT(*) AS total_ventas,
+       AVG(valor) AS promedio_ventas
+FROM VentasAltas;
+2---------------------------------------------------------------------------
+WITH PromedioPorDepartamento AS (
+    SELECT departamento_id,
+           AVG(salario) AS promedio_salario
+    FROM Empleados
+    GROUP BY departamento_id
+)
+SELECT *
+FROM PromedioPorDepartamento
+WHERE promedio_salario > 4000;
+3---------------------------------------------------------------------------
+WITH AntiguedadEmpleados AS (
+    SELECT *,
+           DATEDIFF(CURDATE(), fecha_contratacion) AS dias_antiguedad
+    FROM Empleados
+)
+SELECT *
+FROM AntiguedadEmpleados
+WHERE dias_antiguedad > 365 * 5;
+4---------------------------------------------------------------------------
+WITH VentasClientes AS (
+    SELECT v.*, c.nombre, c.apellido
+    FROM Ventas v
+    JOIN Clientes c ON v.cliente_id = c.cliente_id
+    WHERE v.fecha_venta >= DATE_SUB(CURDATE(), INTERVAL 1 YEAR)
+)
+SELECT cliente_id, nombre, apellido, COUNT(*) AS compras
+FROM VentasClientes
+GROUP BY cliente_id, nombre, apellido
+HAVING COUNT(*) > 3;
+5---------------------------------------------------------------------------
+WITH TopEmpleados AS (
+    SELECT nombre, salario
+    FROM Empleados
+    ORDER BY salario DESC
+    LIMIT 10
+)
+SELECT *
+FROM TopEmpleados;
+6---------------------------------------------------------------------------
+WITH VentasPorMes AS (
+    SELECT YEAR(fecha_venta) AS anio,
+           MONTH(fecha_venta) AS mes,
+           SUM(valor) AS total_ventas
+    FROM Ventas
+    GROUP BY YEAR(fecha_venta), MONTH(fecha_venta)
+)
+SELECT *
+FROM VentasPorMes
+WHERE total_ventas > 5000;
+7---------------------------------------------------------------------------NO LO ENTIENDO
+WITH RECURSIVE JerarquiaDepartamental AS (
+    SELECT departamento_id, nombre_departamento, jefe_id
+    FROM Departamentos
+    WHERE jefe_id IS NULL
+
+    UNION ALL
+
+    SELECT d.departamento_id, d.nombre_departamento, d.jefe_id
+    FROM Departamentos d
+    JOIN JerarquiaDepartamental j
+        ON d.jefe_id = j.departamento_id
+)
+SELECT *
+FROM JerarquiaDepartamental;
+8---------------------------------------------------------------------------
+WITH ClientesDuplicados AS (
+    SELECT nombre, apellido, COUNT(*) AS cantidad
+    FROM Clientes
+    GROUP BY nombre, apellido
+    HAVING COUNT(*) > 1
+)
+SELECT c.*
+FROM Clientes c
+JOIN ClientesDuplicados d
+    ON c.nombre = d.nombre AND c.apellido = d.apellido;
+9---------------------------------------------------------------------------
+WITH TotalVentasPorCliente AS (
+    SELECT cliente_id, SUM(valor) AS total
+    FROM Ventas
+    GROUP BY cliente_id
+),
+ClientesTop AS (
+    SELECT *
+    FROM TotalVentasPorCliente
+    WHERE total > 10000
+)
+SELECT *
+FROM ClientesTop;
+10---------------------------------------------------------------------------
+WITH VentasUltimoMes AS (
+    SELECT *
+    FROM Ventas
+    WHERE fecha_venta >= DATE_SUB(CURDATE(), INTERVAL 1 MONTH)
+)
+SELECT c.nombre, c.apellido, v.valor
+FROM VentasUltimoMes v
+JOIN Clientes c ON v.cliente_id = c.cliente_id;
+
+
+
+
+
+
+
+
+

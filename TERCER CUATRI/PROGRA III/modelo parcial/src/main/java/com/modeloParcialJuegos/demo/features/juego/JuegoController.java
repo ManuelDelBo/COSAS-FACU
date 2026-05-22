@@ -1,0 +1,38 @@
+package com.modeloParcialJuegos.demo.features.juego;
+
+import jakarta.validation.Valid;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.UUID;
+
+@RestController
+@RequestMapping("/juegos")
+public class JuegoController {
+    private final IJuegoService juegoService;
+
+    public JuegoController(IJuegoService juegoService) {
+        this.juegoService = juegoService;
+    }
+
+    @GetMapping
+    public ResponseEntity<List<JuegoResponseDTO>> getAll(
+            @RequestParam(required = false) Boolean activo) {
+        return ResponseEntity.ok(juegoService.getAll(activo));
+    }
+
+    @GetMapping("/{externalId}")
+    public ResponseEntity<JuegoResponseDTO> getById(@PathVariable UUID externalId) {
+        return ResponseEntity.ok(juegoService.getById(externalId));
+    }
+
+    @PostMapping
+    public ResponseEntity   <JuegoResponseDTO> create(
+            @Valid
+            @RequestBody JuegoRequestDTO juegoRequestDTO) {
+        return ResponseEntity
+                .status(201)
+                .body(juegoService.create(juegoRequestDTO));
+    }
+}

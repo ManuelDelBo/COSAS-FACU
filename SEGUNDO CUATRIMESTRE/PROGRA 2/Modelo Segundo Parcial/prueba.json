@@ -1,0 +1,72 @@
+{
+  "cursos": [
+    {
+      "nombre": "Programación Avanzada",
+      "codigo": "PA2025",
+      "profesor": "Dr. Manuel Del-Bo",
+      "estudiantes": [
+        {
+          "nombre": "Juan Pérez",
+          "legajo": 12345,
+          "actividades": [
+            {
+              "nombre": "Examen Parcial",
+              "tipo": "Examen",
+              "notas": [8.5, 7.0],
+              "comentarios": ["Buen desempeño", "Puede mejorar la teoría"]
+            },
+            {
+              "nombre": "Proyecto Final",
+              "tipo": "Proyecto",
+              "notas": [9.0],
+              "comentarios": ["Excelente implementación"]
+            }
+          ]
+        },
+        {
+          "nombre": "Ana Gómez",
+          "legajo": 12346,
+          "actividades": [
+            {
+              "nombre": "Examen Parcial",
+              "tipo": "Examen",
+              "notas": [10.0, 2.0],
+              "comentarios": ["Excelente", "Nota inválida"]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "nombre": "Matemática Discreta",
+      "codigo": "MD2025",
+      "profesor": "Lic. Laura Fernández",
+      "estudiantes": [
+        {
+          "nombre": "Pedro Martínez",
+          "legajo": 22345,
+          "actividades": [
+            {
+              "nombre": "Trabajo Práctico 1",
+              "tipo": "Trabajo",
+              "notas": [7.0, 8.0, 9.0],
+              "comentarios": ["Bien", "Muy bien", "Excelente"]
+            }
+          ]
+        },
+        {
+          "nombre": "Julio Argentino Roca",
+          "legajo": 22346,
+          "actividades": [
+            {
+              "nombre": "Examen Parcial",
+              "tipo": "Examen",
+              "notas": [6.0],
+              "comentarios": ["Regular"]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

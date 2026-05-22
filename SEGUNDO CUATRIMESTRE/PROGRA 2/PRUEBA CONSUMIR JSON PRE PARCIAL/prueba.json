@@ -1,0 +1,118 @@
+{
+  "tienda": {
+    "nombre": "ElectroStore",
+    "ubicacion": "Centro Comercial Sur",
+    "productos": [
+      {
+        "tipo": "DispositivoMovil",
+        "nombre": "Smartphone X100",
+        "marca": "TechCorp",
+        "precio": 799.99,
+        "cantidadDisponible": 150,
+        "seccionTienda": "Móviles",
+        "soporta5G": true,
+        "sistemaOperativo": "Android 13",
+        "especificaciones": [
+          { "nombre": "Pantalla", "valor": "6.5 pulgadas" },
+          { "nombre": "Batería", "valor": "4000mAh" }
+        ],
+        "embalajesDisponibles": [
+          {
+            "tipo": "Caja de cartón",
+            "resistencia": "Alta",
+            "dimensiones": "15x10x5cm"
+          }
+        ]
+      },
+      {
+        "tipo": "Portatil",
+        "nombre": "Laptop Pro Z",
+        "marca": "ByteMachines",
+        "precio": 1299.99,
+        "cantidadDisponible": 80,
+        "seccionTienda": "Computadoras",
+        "tipoAlmacenamiento": "SSD NVMe 1TB",
+        "sistemaOperativoPreinstalado": "Windows 11 Pro",
+        "especificaciones": [
+          { "nombre": "Procesador", "valor": "Intel i7" },
+          { "nombre": "RAM", "valor": "16GB" }
+        ],
+        "embalajesDisponibles": [
+          {
+            "tipo": "Caja de cartón",
+            "resistencia": "Alta",
+            "dimensiones": "40x30x10cm"
+          },
+          {
+            "tipo": "Maletín",
+            "resistencia": "Media",
+            "dimensiones": "45x35x12cm"
+          }
+        ]
+      },
+      {
+        "tipo": "Accesorio",
+        "nombre": "Teclado Mecánico",
+        "marca": "ClickyKeys",
+        "precio": 99.99,
+        "cantidadDisponible": 500,
+        "seccionTienda": "Accesorios",
+        "tipoConexion": "USB-C",
+        "antiGhosting": true,
+        "especificaciones": [
+          { "nombre": "Tipo de Tecla", "valor": "Mecánico" },
+          { "nombre": "Retroiluminación", "valor": "RGB" }
+        ],
+        "embalajesDisponibles": [
+          {
+            "tipo": "Caja de plástico",
+            "resistencia": "Media",
+            "dimensiones": "35x15x5cm"
+          }
+        ]
+      },
+      {
+        "tipo": "Audio",
+        "nombre": "Auriculares SoundMax",
+        "marca": "BeatMaster",
+        "precio": 149.99,
+        "cantidadDisponible": 300,
+        "seccionTienda": "Audio",
+        "cancelacionRuido": true,
+        "autonomiaBateriaHoras": 20,
+        "especificaciones": [
+          { "nombre": "Tipo", "valor": "Inalámbrico" },
+          { "nombre": "Micrófono Integrado", "valor": "Sí" }
+        ],
+        "embalajesDisponibles": [
+          {
+            "tipo": "Caja de cartón",
+            "resistencia": "Alta",
+            "dimensiones": "20x15x8cm"
+          }
+        ]
+      },
+      {
+        "tipo": "Smartwatch",
+        "nombre": "FitTime Active",
+        "marca": "LifeTech",
+        "precio": 249.99,
+        "cantidadDisponible": 200,
+        "seccionTienda": "Wearables",
+        "resistenciaAgua": "50m",
+        "monitorRitmoCardiaco": true,
+        "especificaciones": [
+          { "nombre": "Pantalla", "valor": "1.4 pulgadas OLED" },
+          { "nombre": "Compatibilidad", "valor": "Android/iOS" }
+        ],
+        "embalajesDisponibles": [
+          {
+            "tipo": "Caja de cartón",
+            "resistencia": "Media",
+            "dimensiones": "10x10x5cm"
+          }
+        ]
+      }
+    ]
+  }
+}

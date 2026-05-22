@@ -1,0 +1,110 @@
+1----------------------------------------------------------
+CREATE VIEW clientes_por_ciudad AS
+SELECT 
+    CONCAT(nombre, ' ', apellido) AS nombre_completo,
+    email,
+    ciudad
+FROM Clientes
+WHERE ciudad = 'Madrid'
+WITH CHECK OPTION;
+2----------------------------------------------------------
+CREATE VIEW resumen_ventas_categoria AS
+SELECT 
+    p.categoria,
+    SUM(dp.cantidad) AS total_vendido
+FROM Productos p
+JOIN Detalle_Pedido dp ON p.producto_id = dp.producto_id
+GROUP BY p.categoria;
+3----------------------------------------------------------
+CREATE VIEW clientes_total_pedidos AS
+SELECT 
+    CONCAT(c.nombre, ' ', c.apellido) AS nombre_completo,
+    COUNT(p.pedido_id) AS total_pedidos
+FROM Clientes c
+JOIN Pedidos p ON c.cliente_id = p.cliente_id
+GROUP BY c.cliente_id;
+4----------------------------------------------------------
+CREATE VIEW productos_mas_vendidos_ciudad AS
+SELECT 
+    c.ciudad,
+    pr.nombre_producto,
+    SUM(dp.cantidad) AS total_vendido
+FROM Clientes c
+JOIN Pedidos p ON c.cliente_id = p.cliente_id
+JOIN Detalle_Pedido dp ON p.pedido_id = dp.pedido_id
+JOIN Productos pr ON dp.producto_id = pr.producto_id
+GROUP BY c.ciudad, pr.nombre_producto;
+5----------------------------------------------------------
+CREATE VIEW ingresos_por_mes AS
+SELECT 
+    DATE_FORMAT(p.fecha_pedido, '%Y-%m') AS mes,
+    SUM(dp.cantidad * pr.precio) AS ingresos_totales
+FROM Pedidos p
+JOIN Detalle_Pedido dp ON p.pedido_id = dp.pedido_id
+JOIN Productos pr ON dp.producto_id = pr.producto_id
+GROUP BY mes;
+6----------------------------------------------------------
+CREATE VIEW productos_electronicos AS
+SELECT *
+FROM Productos
+WHERE categoria = 'Electrónicos';
+
+CREATE VIEW ventas_electronicos AS
+SELECT dp.*
+FROM Detalle_Pedido dp
+JOIN productos_electronicos pe ON dp.producto_id = pe.producto_id
+WITH LOCAL CHECK OPTION;
+7----------------------------------------------------------
+CREATE VIEW ventas_electronicos AS
+SELECT dp.*
+FROM Detalle_Pedido dp
+JOIN productos_electronicos pe ON dp.producto_id = pe.producto_id
+WITH CASCADED CHECK OPTION;
+8----------------------------------------------------------
+CREATE VIEW clientes_productos_favoritos AS
+SELECT 
+    CONCAT(c.nombre, ' ', c.apellido) AS nombre_completo,
+    (
+        SELECT pr.nombre_producto
+        FROM Pedidos p2
+        JOIN Detalle_Pedido dp2 ON p2.pedido_id = dp2.pedido_id
+        JOIN Productos pr ON dp2.producto_id = pr.producto_id
+        WHERE p2.cliente_id = c.cliente_id
+        GROUP BY pr.producto_id
+        ORDER BY SUM(dp2.cantidad) DESC
+        LIMIT 1
+    ) AS producto_favorito
+FROM Clientes c;
+9----------------------------------------------------------
+CREATE VIEW clientes_pedidos_recientes AS
+SELECT 
+    CONCAT(c.nombre, ' ', c.apellido) AS nombre_completo,
+    (
+        SELECT MAX(p.fecha_pedido)
+        FROM Pedidos p
+        WHERE p.cliente_id = c.cliente_id
+    ) AS fecha_ultimo_pedido
+FROM Clientes c;
+
+
+CREATE VIEW clientes_pedidos_recientes AS
+SELECT 
+    CONCAT(c.nombre, ' ', c.apellido) AS nombre_completo,
+    (
+        SELECT p.fecha_pedido
+        FROM Pedidos p
+        WHERE p.cliente_id = c.cliente_id
+        ORDER BY p.fecha_pedido DESC
+        LIMIT 1
+    ) AS fecha_ultimo_pedido,
+    (
+        SELECT pr.nombre_producto
+        FROM Pedidos p
+        JOIN Detalle_Pedido dp ON p.pedido_id = dp.pedido_id
+        JOIN Productos pr ON dp.producto_id = pr.producto_id
+        WHERE p.cliente_id = c.cliente_id
+        ORDER BY p.fecha_pedido DESC
+        LIMIT 1
+    ) AS producto_reciente
+FROM Clientes c;
+

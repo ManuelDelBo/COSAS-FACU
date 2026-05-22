@@ -1,0 +1,219 @@
+CREATE TABLE Auditoria_Clientes (
+    AuditoriaID INT AUTO_INCREMENT PRIMARY KEY,
+    ClienteID INT,
+    Accion VARCHAR(10), -- INSERT o UPDATE
+    Fecha DATETIME,
+    
+    Nombre_Anterior VARCHAR(50),
+    Apellido_Anterior VARCHAR(50),
+    Email_Anterior VARCHAR(100),
+    Telefono_Anterior VARCHAR(15),
+    
+    Nombre_Nuevo VARCHAR(50),
+    Apellido_Nuevo VARCHAR(50),
+    Email_Nuevo VARCHAR(100),
+    Telefono_Nuevo VARCHAR(15)
+);
+
+DELIMITER// 
+
+CREATE TRIGGER trg_auditoria_insert_clientes
+AFTER INSERT ON Clientes
+FOR EACH ROW
+BEGIN
+    INSERT INTO Auditoria_Clientes (
+        ClienteID, Accion, Fecha,
+        Nombre_Nuevo, Apellido_Nuevo, Email_Nuevo, Telefono_Nuevo
+    )
+    VALUES (
+        NEW.ClienteID, 'INSERT', NOW(),
+        NEW.Nombre, NEW.Apellido, NEW.Email, NEW.Telefono
+    );
+END //
+DELIMITER;
+2-------------------------------------------------------------------------------------------
+DELIMITER
+AFTER UPDATE ON Clientes
+FOR EACH ROW
+BEGIN
+    INSERT INTO Auditoria_Clientes (
+        ClienteID, Accion, Fecha,
+        Nombre_Anterior, Apellido_Anterior, Email_Anterior, Telefono_Anterior,
+        Nombre_Nuevo, Apellido_Nuevo, Email_Nuevo, Telefono_Nuevo
+    )
+    VALUES (
+        OLD.ClienteID, 'UPDATE', NOW(),
+        OLD.Nombre, OLD.Apellido, OLD.Email, OLD.Telefono,
+        NEW.Nombre, NEW.Apellido, NEW.Email, NEW.Telefono
+    );
+END //
+DELIMITER;
+3-------------------------------------------------------------------------------------------
+DELIMITER//
+
+CREATE TRIGGER trg_auditoria_delete_clientes
+AFTER DELETE ON Clientes
+FOR EACH ROW
+BEGIN
+  INSERT INTO Auditoria_Clientes (
+      Cliente_id, Accion, fecha
+      Nombre_Anterior, Apellido_Anterior, Email_Anterior, Telefono_Anterior
+  )
+  VALUES (
+      OLD.Cliente_id, 'DELETE', NOW()
+      OLD.Nombre, OLD.Apellido, OLD.Email, OLD.Telefono
+  );       
+END//
+DELIMITER;
+4-------------------------------------------------------------------------------------------
+DELIMITER//
+CREATE TRIGGER trg_update_precio_total
+AFTER INSERt on DetallesPedido
+FOR EACH ROW
+BEGIN
+DECLARE v_suma DECIMAL(10,2);
+
+SELECT SUM(d.Cantidad * p.Precio) INTO v_suma
+FROM DettallesPedido d
+JOIN Productos p ON d.ProductoID = p.ProductoID
+WHERE d.PedidoID = NEW.PedidoID;
+
+UPDATE Pedidos
+SET PrecioTotal = v_suma
+WHERE PedidoID = NEW.PedidoIDM
+
+END//
+DELIMITER;
+5-------------------------------------------------------------------------------------------
+DELIMITER //
+
+CREATE TRIGGER trg_validar_cantidad_detalle
+BEFORE INSERT ON DetallesPedido
+FOR EACH ROW
+BEGIN
+    DECLARE stock_actual INT;
+
+    -- Obtener stock del producto
+    SELECT Stock INTO stock_actual
+    FROM Productos
+    WHERE ProductoID = NEW.ProductoID;
+
+    -- Validar cantidad positiva
+    IF NEW.Cantidad <= 0 THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'La cantidad debe ser mayor a 0';
+    END IF;
+
+    -- Validar contra stock
+    IF NEW.Cantidad > stock_actual THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'No hay suficiente stock disponible';
+    END IF;
+
+END //
+
+6-------------------------------------------------------------------------------------------
+DELIMITER //
+
+CREATE TRIGGER trg_update_precio_producto
+BEFORE UPDATE ON Productos
+FOR EACH ROW
+BEGIN
+    SET NEW.Precio = NEW.Costo * 1.3;
+END //
+
+DELIMITER ;
+7-------------------------------------------------------------------------------------------
+CREATE TRIGGER trg_auditoria_insert_pedidos
+AFTER INSERT ON Pedidos
+FOR EACH ROW
+BEGIN
+    INSERT INTO Auditoria_Pedidos (PedidoID, Accion, Fecha)
+    VALUES (NEW.PedidoID, 'INSERT', NOW());
+END;
+8-------------------------------------------------------------------------------------------
+CREATE TRIGGER trg_auditoria_update_pedidos
+AFTER UPDATE ON Pedidos
+FOR EACH ROW
+BEGIN
+    INSERT INTO Auditoria_Pedidos (PedidoID, Accion, Fecha)
+    VALUES (OLD.PedidoID, 'UPDATE', NOW());
+END;
+
+9-------------------------------------------------------------------------------------------
+CREATE TRIGGER trg_auditoria_delete_pedidos
+AFTER DELETE ON Pedidos
+FOR EACH ROW
+BEGIN
+    INSERT INTO Auditoria_Pedidos (PedidoID, Accion, Fecha)
+    VALUES (OLD.PedidoID, 'DELETE', NOW());
+END;
+10-------------------------------------------------------------------------------------------
+CREATE TRIGGER trg_update_stock_insert
+AFTER INSERT ON DetallesPedido
+FOR EACH ROW
+BEGIN
+    UPDATE Productos
+    SET Stock = Stock - NEW.Cantidad
+    WHERE ProductoID = NEW.ProductoID;
+END;
+11------------------------------------------------------
+CREATE TRIGGER trg_validar_email
+BEFORE INSERT ON Clientes
+FOR EACH ROW
+BEGIN
+    IF NEW.Email NOT LIKE '%@%' THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Email inválido';
+    END IF;
+END;
+12------------------------------------------------------
+CREATE TRIGGER trg_auditoria_insert_productos
+AFTER INSERT ON Productos
+FOR EACH ROW
+BEGIN
+    INSERT INTO Auditoria_Productos (ProductoID, Accion, Fecha)
+    VALUES (NEW.ProductoID, 'INSERT', NOW());
+END;
+13------------------------------------------------------
+CREATE TRIGGER trg_auditoria_update_productos
+AFTER UPDATE ON Productos
+FOR EACH ROW
+BEGIN
+    INSERT INTO Auditoria_Productos (ProductoID, Accion, Fecha)
+    VALUES (OLD.ProductoID, 'UPDATE', NOW());
+END;
+14------------------------------------------------------
+CREATE TRIGGER trg_auditoria_delete_productos
+AFTER DELETE ON Productos
+FOR EACH ROW
+BEGIN
+    INSERT INTO Auditoria_Productos (ProductoID, Accion, Fecha)
+    VALUES (OLD.ProductoID, 'DELETE', NOW());
+END;
+15------------------------------------------------------
+CREATE TRIGGER trg_update_stock_delete
+AFTER DELETE ON DetallesPedido
+FOR EACH ROW
+BEGIN
+    UPDATE Productos
+    SET Stock = Stock + OLD.Cantidad
+    WHERE ProductoID = OLD.ProductoID;
+END;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

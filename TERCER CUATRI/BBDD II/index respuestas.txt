@@ -1,0 +1,112 @@
+CREATE INDEX idx_clientes_ciudad ON Clientes(ciudad)
+
+
+SELECT CONCAT(nombre, " ", apellido) AS nombre_completo, email
+FROM Clientes
+WHERE ciudad = "Madrid"
+2----------------------------------------------------------------
+CREATE INDEX idx_pedidos_cliente_fecha ON Pedidos(cliente_id, fecha_pedido);
+
+DELIMITER//
+
+CREATE FUNCTION pedidos_entre_fechas(p_cliente_id INT, p_fecha_inicio DATE, p_fecha_fin DATE)
+RETURNS INT
+NO DETERMINISTIC
+READS SQL DATA
+BEGIN
+DECLARE v_total_pedidos INT;
+
+SELECT COUNT(*) INTO v_total_pedidos
+FROM Pedidos
+WHERE cliente_id = p_cliente_id
+AND fecha_pedido BETWEEN p_fecha_inicio AND p_fecha_fin;
+
+
+RETURN IFNULL(v_total_pedidos, 0);
+
+END//
+
+DELIMITER;
+
+SELECT CONCAT(c.nombre, " ", c.apellido) AS nombre_completo, 
+       pedidos_entre_fechas(c.cliente_id, '2025-10-12', '2026-01-02') AS total_pedidos
+FORM Clientes c
+JOIN Pedidos p ON c.cliente_id = p.cliente_id
+GROUP BY c.cliente_id; c.nombre, c.apellido;
+
+3----------------------------------------------------------------
+CREATE UNIQUE INDEX idx_productos_codigo_producto ON Productos (codigo_producto);
+
+INSERT INTO Productos (producto_id, codigo_producto, nombre_producto , descripcion, 
+                       categoria, precio) 
+VALUES (5, 265325, "CAJA", "tREMENDA CAJA JEJE", "GUARDADO", 20000.00)
+
+4----------------------------------------------------------------
+CREATE FULLTEXT INDEX idx_productos_nombre_descripcion ON Productos(nombre_producto, descripcion)
+
+
+SELECT *
+FROM Productos
+WHERE MATCH(nombre_producto, descripcion) AGAINST('portátil');
+5----------------------------------------------------------------
+CREATE INDEX idx_ventas_id_fecha ON Ventas(producto_id, fecha_venta);
+
+SELECT p.nombre_producto, COUNT(v.producto_id) AS cantidad_ventas
+FROM Ventas v
+JOIN Productos p ON p.producto_id = v.producto_id
+WHERE v.fecha_venta BETWEEN '2025-01-01' AND '2025-12-31'
+GROUP BY p.nombre_producto, p.producto_id
+
+6----------------------------------------------------------------
+CREATE INDEX idx_clientes_email ON Clientes(email);
+
+SELECT *
+FROM CLIENTES
+WHERE email = 'ejemplo@correo.com';
+
+7----------------------------------------------------------------
+CREAT INDEX idx_productos_precio ON Productos(precio);
+
+
+SELECT *
+FROM Productos
+WHERE precio BETWEEN 50 AND 100;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,39 @@
+package com.modeloParcialJuegos.demo.features.reserva;
+
+import jakarta.validation.constraints.FutureOrPresent;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.PastOrPresent;
+import jakarta.validation.constraints.Positive;
+import lombok.*;
+
+import java.time.LocalDate;
+import java.util.UUID;
+
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class ReservaRequestDTO {
+
+    @NotNull(message = "La fecha de reserva no puede estar vacia")
+    @PastOrPresent(message = "La fecha de reserva no puede ser futura")
+    private LocalDate fechaReserva;
+
+    @NotNull(message = "La fecha de retiro no puede estar vacia")
+    @FutureOrPresent(message = "La fecha de retiro no puede ser pasada")
+    private LocalDate fechaRetiro;
+
+    @NotNull(message = "La cantidad no puede estar vacia")
+    @Positive(message = "La cantidad debe ser mayor a 0")
+    private Integer cantidad;
+
+    @NotNull(message = "El estado no puede estar vacio")
+    private estadoEnum estado;
+
+    @NotNull(message = "El juego no puede estar vacio")
+    private UUID juegoId;
+
+    @NotNull(message = "El socio no puede estar vacio")
+    private UUID socioId;
+}

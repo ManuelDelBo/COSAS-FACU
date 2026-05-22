@@ -1,0 +1,292 @@
+DELIMITER//
+
+CREATE FUNCTION nombreCompleto (nombre VARCHAR(100), apellido VARCHAR(100))
+RETURNS VARCHAR(200)
+DETERMINISTIC
+NO SQL
+BEGIN
+RETURN CONCAT(nombre, " ", apellido);
+END//
+
+DELIMITER;
+
+SELECT nombreCompleto(nombre, apellido) AS nombre_completo
+FROM Clientes
+WHERE cliente_id = 2;
+2------------------------------------------------------------------------------
+DELIMITER//
+
+CREATE FUNCTION promedioVentasCliente (p_cliente_id INT)
+RETURNS DECIMAL(10,2)
+NOT DETERMINISTIC
+READS SQL DATA
+BEGIN
+DECLARE promedio DECIMAL(10,2);
+
+SELECT AVG(valor) INTO promedio 
+FROM Ventas
+WHERE cliente_id = p_cliente_id
+
+RETURN IFNULL(promedio, 0);
+
+END//
+
+DELIMITER;
+
+SELECT promedioVentasCliente(2) AS promedio_ventas;
+
+3------------------------------------------------------------------------------
+DELIMITER//
+
+CREATE FUNCTION antiguedadEmpleado(p_empleado_id INT)
+RETURNS DECIMAL(7,2)
+NOT DETERMINISTIC
+READS SQL DATA
+BEGIN
+DECLARE antiguedad DECIMAL(7,2)
+
+SELECT DATEDIF(CURDATE(), fecha_contratacion) INTO antiguedad 
+FROM Empleados
+WHERE empleado_id = p_empleado_id;
+
+RETURN (antiguedad / 365,25);
+END//
+
+DELIMITER;
+
+SELECT antiguedadEmpleado(3) AS antiguedad_en_anios;
+
+DELIMITER;
+
+4------------------------------------------------------------------------------
+DELIMITER//
+
+CREATE FUNCTION caluclarComision (p_cliente_id INT)
+RETURNS DECIMAL(10,2)
+NOT DETERMINISTIC
+READS SQL DATA
+BEGIN
+
+DECLARE TotalVentas DECIMAL(10,2);
+
+SELECT SUM(valor) INTO TotalVentas 
+FROM Ventas
+WHERE cliente_id = p_cliente_id;
+
+
+RETURN IFNULL(TotalVentas * 0.10, 0);
+
+END//
+
+DELIMITER;
+
+SELECT calcularComision(2) AS comisiones_total;
+
+5------------------------------------------------------------------------------
+DELIMITER//
+
+CREATE FUNCTION jefeDpto (p_departamento_id int)
+RETURNS VARCHAR(100)
+NO DETERMINISTIC
+READS SQL DATA
+BEGIN
+
+DECLARE v_nombreJefe VARCHAR(100);
+
+SELECT e.nombre INTO v_nombre_jefe
+FROM Departamentos d
+JOIN Empleados e ON d.jefe_id = e.empleado_id
+WHERE d.departamento_id = p_departamento_id;
+
+
+RETURN IFNULL(v_nombreJefe, 'Sin jefe asignado');
+
+END//
+
+DELIMITER;
+
+SELECT jefeDpto(5) AS Nombre_Jefe_Dpto;
+
+6------------------------------------------------------------------------------
+DELIMITER//
+
+CREATE FUNCTION ventasEntreFechas(p_incio DATE, p_fin DATE)
+RETURNS DECIMAL(10,2)
+NO DETERMINISTIC
+READS SQL DATA
+BEGIN
+
+DECLARE v_valorVentas DECIMAL(10,2);
+
+SELECT SUM(valor) INTO v_valorVentas 
+FROM Ventas
+WHERE fecha_venta BETWEEN p_incio AND p_fin;
+
+RETURN IFNULL(v_valorVentas, 0);
+
+END//
+
+DELIMITER;
+
+SELECT ventasEntreFechas('2025-12-12', '2026-01-01') As TotalVentasRango
+
+7------------------------------------------------------------------------------
+DELIMITER//
+
+CREATE FUNCTION porcentajeSobreDpto (p_empleado_id INT)
+RETURNS DECIMAL(10,2)
+NOT DETERMINISTIC
+READS SQL DATA
+
+BEGIN
+
+DECLARE v_salario DECIMAL(10,2);
+DECLARE v_departamento_id INT;
+DECLARE v_total_departamento DECIMAL(10,2);
+
+SELECT salario departamento_id INTO v_salario, v_departamento_id
+FROM Empleados
+WHERE empleado_id = p_empleado_id;
+
+SELECT SUM(salario) INTO v_total_departamento
+FROM Empleados
+WHERE departamento_id = v_departamento_id;
+
+RETURN IFNULL(v_salario / v_total_departamento * 100), 0);
+
+END//
+DELIMITER;
+
+SELECT porcentajeSobreDpto(2);
+
+8------------------------------------------------------------------------------
+DELIMITER//
+
+CREATE FUNCTION ventasPorCliente(p_cliente_id INT) 
+RETURNS VARCHAR(100)
+NOT DETERMINISTIC
+READS SQL DATA
+
+BEGIN 
+
+DECLARE v_ventas INT;
+
+SELECT COUNT(cliente_id) INTO v_ventas
+FROM Ventas
+WHERE cliente_id = p_cliente_id;
+
+IF v_ventas = 0 THEN
+ RETURN "No tiene ventas";
+ELSE
+ RETURN "Tiene ventas";
+END IF;
+
+END//
+DELIMITER;
+
+SELECT ventasPorCliente(5);
+
+
+9------------------------------------------------------------------------------
+DELIMITER//
+
+CREATE FUNCTION totalVentasCLiente (p_cliente_id INT)
+RETURNS INT
+NOT DETERMINISTIC
+READS SQL DATA
+
+BEGIN
+DECLARE v_total_ventas INT;
+
+SELECT COUNT(*) INTO v_total_ventas
+FROM Ventas
+WHERE cliente_id = p_cliente_id;
+
+RETURN IFNULL(v_total_ventas, 0);
+
+END//
+
+DELIMITER;
+
+SELECT totalVentasCLiente(8);
+
+10------------------------------------------------------------------------------
+DELIMITER//
+CREATE FUNCTION deptoEmpleado(p_empleado_id INT)
+RETURNS VARCHAR(100)
+NOT DETERMINISTIC
+READS SQL DATA
+
+BEGIN
+
+DECLARE v_departamento VARCHAR(100);
+
+SELECT d.nombre_departamento INTO v_departamento
+FROM Departamentos d
+JOIN Empleados e ON d.departamento_id = e.departamento_id
+WHERE e.empleado_id = p_empleado_id;
+
+RETURN IFNULL(v_departamento, "SIN RESULTADO");
+
+END//
+
+DELIMITER;
+
+SELECT deptoEmpleado(5) AS departamentoDelEmpleado;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

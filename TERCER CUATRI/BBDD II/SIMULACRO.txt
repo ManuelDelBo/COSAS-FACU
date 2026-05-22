@@ -1,0 +1,297 @@
+1-------------------------------------------------------------------------------
+DELIMITER//
+CREATE PROCEDURE registrarPartido(p_EquipoLocalID INT, p_EquipoVisitanteID INT, p_TorneoID INT, p_FechaPartido DATE)
+BEGIN
+ DECLARE v_id_equipo1_exist INT;
+ DECLARE v_id_equipo2_exist INT;
+ DECLARE v_id_torneo_exist INT;
+ 
+ DECLARE EXIT HANDLER FOR SQLEXCEPTION
+ BEGIN
+  ROLLBACK;
+
+  SELECT 'Error al intentar registrar partido.' AS Mensaje;
+ END;
+
+ START TRANSACTION;
+
+ SELECT COUNT(*) INTO v_id_equipo1_exist 
+ FROM Equipos 
+ WHERE p_EquipoLocalID = EquipoID;
+
+ SELECT COUNT(*) INTO v_id_equipo2_exist 
+ FROM Equipos 
+ WHERE  p_EquipoVisitanteID = EquipoID;
+
+ SELECT COUNT(*) INTO v_id_torneo_exist 
+ FROM Torneos
+ WHERE p_TorneoID = TorneoID;
+
+
+ IF v_id_equipo1_exist = 0 THEN
+  SIGNAL SQLSTATE '45000'
+  SET MESSAGE_TEXT = 'Equipo local inexistente';
+ ELSEIF v_id_equipo2_exist = 0 THEN
+  SIGNAL SQLSTATE '45000'
+  SET MESSAGE_TEXT = 'Equipo visitante inexistente';
+ ELSEIF v_id_torneo_exist = 0 THEN
+  SIGNAL SQLSTATE '45000'
+  SET MESSAGE_TEXT = 'Torneo inexistente';
+ ELSE
+ INSERT INTO Partidos(TorneoID, EquipoLocalID, EquipoVisitanteID, FechaPartido)
+ VALUES(p_TorneoID, p_EquipoLocalID, p_EquipoVisitanteID, p_FechaPartido);
+ 
+ COMMIT;
+
+ SELECT 'Partido registrado correctamente.' AS Mensaje;
+
+ END IF;
+
+END//
+
+DELIMITER;
+
+2-------------------------------------------------------------------------------
+DELIMITER//
+CREATE PROCEDURE registrarEstadisticasJugador(p_JugadorID INT,                                                                    p_PartidoID INT, 
+                                              p_Goles INT, p_Asistencias INT,                                                     p_TarjetasAmarillas INT,                                                            p_TarjetasRojas INT)
+BEGIN
+ DECLARE v_JugadorID_exist INT;
+ DECLARE v_PartidoID_exist INT;
+
+ DECLARE EXIT HANDLER FOR SQLEXCEPTION
+ BEGIN 
+  ROLLBACK;
+
+  SELECT 'Error al cargar estadisticas.' AS Mensaje;
+
+ END;
+
+ START TRANSACTION;
+
+ SELECT COUNT(*) INTO v_JugadorID_exist
+ FROM Jugadores
+ WHERE JugadorID = p_JugadorID;
+
+ SELECT COUNT(*) INTO v_PartidoID_exist
+ FROM Partidos
+ WHERE PartidoID = p_PartidoID;
+
+ IF v_JugadorID_exist = 0 THEN
+  SIGNAL SQLSTATE '45000'
+  SET MESSAGE_TEXT = 'Jugador inexistente.';
+ ELSEIF v_PartidoID_exist = 0 then
+  SIGNAL SQLSTATE '45000'
+  SET MESSAGE_TEXT = 'Partido inexistente.';
+ ELSEIF p_Goles < 0 OR p_Asistencias < 0 THEN
+  SIGNAL SQLSTATE '45000'
+  SET MESSAGE_TEXT = 'Valores inválidos';
+ ELSE
+  INSERT INTO EstadisticasJugador(JugadorID, PartidoID, 
+                                 Goles, Asistencias, 
+                                 TarjetasAmarillas, TarjetasRojas)
+  VALUES(p_JugadorID, p_PartidoID, p_Goles, p_Asistencias, 
+         p_TarjetasAmarillas, p_TarjetasRojas);
+
+  COMMIT;
+
+  SELECT 'Estadisticas jugador registradas correctamente' AS Mensaje;
+
+  END IF;
+
+END//
+
+DELIMITER;
+3-------------------------------------------------------------------------------
+DELIMITER//
+
+CREATE PROCEDURE actualizarEstadisticasJugador(p_JugadorID INT,                                                                    p_PartidoID INT, 
+                                               p_Goles INT, p_Asistencias INT,                                                     p_TarjetasAmarillas INT,                                                            p_TarjetasRojas INT)
+BEGIN
+ DECLARE v_EstadisticaID INT;
+
+ DECLARE EXIT HANDLER FOR NOT FOUND
+ BEGIN
+  SIGNAL SQLSTATE '45000'
+  SET MESSAGE_TEXT = 'Registro de estadistica inexistente.';
+ END;
+
+ DECLARE EXIT HANDLER FOR SQLEXCEPTION
+ BEGIN 
+  ROLLBACK;
+
+  SELECT 'Error al actualizar estadisticas.' AS Mensaje;
+ END;
+
+ START TRANSACTION;
+
+ SELECT EstadisticaID 
+ INTO v_EstadisticaID
+ FROM EstadisticasJugador
+ WHERE JugadorID = p_JugadorID 
+ AND PartidoID = p_PartidoID;
+
+ IF p_Goles < 0 OR p_Asistencias < 0 OR 
+    p_TarjetasAmarillas < 0 OR p_TarjetasRojas < 0 THEN
+  SIGNAL SQLSTATE '45000'
+  SET MESSAGE_TEXT = 'Valore ingresados incorrectos.';
+ ELSE 
+  UPDATE EstadisticasJugador
+  SET Goles =  p_Goles
+      Asistencias = p_Asistencias
+      TarjetasAmarillas = p_TarjetasAmarillas
+      TarjetasRojas = p_TarjetasRojas  
+  WHERE EstadisticaID = v_EstadisticaID;
+
+  COMMIT;
+  SELECT 'Estadisticas actualizadas correctamente.' AS Mensaje;
+ END IF;
+ 
+END//
+
+DELIMITER;
+4-------------------------------------------------------------------------------
+DELIMITER//
+CREATE TRIGGER auditarInscripcionTorneo
+AFTER INSERT ON Torneos
+FOR EACH ROW
+BEGIN
+ INSERT INTO AuditoriaInscripciones(TorneoID, NombreTorneo)
+ VALUES (NEW.TorneoID, NEW.NombreTorneo);
+END;
+DELIMITER;
+5----------------------------------------------------------------------------------
+DELIMITER//
+CREATE TRIGGER auditarCambioResultado
+AFTER UPDATE ON Partidos
+FOR EACH ROW
+BEGIN
+ IF OLD.Resultado <> NEW.Resultado THEN
+  INSERT INTO AuditoriaResultados(PartidoID, ResultadoAnterior, ResultadoNuevo)
+  VALUES(NEW.PartidoID, OLD.Resultado, NEW.Resultado);
+ END IF;
+END//
+DELIMITER;
+6----------------------------------------------------------------------------------
+DELIMITER//
+CREATE FUNCTION promedioGolesPorJugador(p_JugadorID INT)
+RETURNS DECIMAL(7,2)
+NO DETERMINISTIC
+READS SQL DATA
+BEGIN
+ DECLARE v_partidosJugados INT;
+ DECLARE v_goles INT;
+
+ SELECT COUNT(PartidoID), IFNULL(SUM(Goles), 0)
+ INTO v_partidosJugados, v_goles
+ FROM EstadisticasJugador
+ WHERE JugadorID = p_JugadorID;
+
+ IF v_partidosJugados = 0 THEN
+  RETURN 0;
+ END IF;
+
+ RETURN v_goles / v_partidosJugados;
+
+END//
+DELIMITER;
+
+7----------------------------------------------------------------------------------
+DELIMITER//
+CREATE FUNCTION estadisticasJugador(p_JugadorID INT)
+RETURNS VARCHAR(150)
+NO DETERMINISTIC
+READS SQL DATA
+BEGIN
+ DECLARE v_resultado VARCHAR(150);
+ 
+ SELECT CONCAT(j.Nombre, " ", 
+               j.Apellido, 
+               " - Goles: ", IFNULL(SUM(ej.Goles), 0), 
+               " - Asistencias: ", IFNULL(SUM(ej.Asistencias), 0))
+ INTO v_resultado 
+ FROM Jugadores j
+ LEFT JOIN EstadisticasJugador ej 
+ ON j.JugadorID = ej.JugadorID
+ WHERE ej.JugadorID = p_JugadorID
+ GROUP BY j.Nombre, j.Apellido;
+
+ RETURN v_resultado;
+END//
+DELIMITER;
+
+8----------------------------------------------------------------------------------
+WITH TarjetasPorJugador AS ( 
+ SELECT JugadorID, TarjetasRojas AS total_tarjetas
+ FROM EstadisticasJugador
+ UNION ALL
+ SELECT JugadorID, TarjetasAmarillas AS total_tarjetas
+ FROM EstadisticasJugador;
+)
+SELECT CONCAT(j.Nombre, " ", j.Apellido) AS nombre_completo,
+       SUM(tpj.total_tarjetas) AS total_tarjetas
+FROM Jugadores j
+JOIN TarjetasPorJugador tpj ON tpj.JugadorID = j.JugadorID;
+GROUP BY j.Nombre, j.Apellido
+ORDER BY total_tarjetas DESC;
+
+9----------------------------------------------------------------------------------
+WITH TopJugadores AS (
+ SELECT JugadorID, SUM(Goles) AS golesTotales, SUM(Asistencias) AS  asistenciasTotales
+ FROM EstadisticasJugador
+ GROUP BY JugadorID
+ HAVING SUM(Goles) > 5  AND SUM(Asistencias) >= 3
+ 
+)
+SELECT CONCAT(j.Nombre, " ", j.Apellido) AS nombre_completo,
+       e.NombreEquipo AS Equipo,
+       tj.golesTotales AS Goles,  
+       tj.asistenciasTotales AS Asistencias
+FROM Equipos e 
+JOIN Jugadores j ON j.EquipoID = e.EquipoID
+JOIN TopJugadores tj on tj.JugadorID = j.JugadorID
+       
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

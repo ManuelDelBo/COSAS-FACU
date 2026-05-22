@@ -1,0 +1,110 @@
+WITH VentasAltas AS (
+SELECT * FROM ventas
+WHERE valor > 1000
+)
+SELECT COUNT(v.venta_id) AS total_ventas, AVG(valor) AS promedio
+FROM VEntasAltas;
+
+2-------------------------------
+WITH PromedioPorDepartamento AS (
+SELECT departamento_id, AVG(salario) AS promedio_salarios
+FROM Empleados
+GROUP BY departamento_id
+)
+SELECT d.nombre_departamento AS departamento, ppd.promedio_salarios AS promedio_salarios
+FROM PromedioPorDepartamento ppd
+JOIN departamentos d ON d.departamento_id = ppd.departamento_id
+WHERE ppd.promedio_salarios > 4000;
+
+3-------------------------------
+WITH AntiguedadEmpleados AS (
+SELECT DATEDIF(NOW(), fecha_contrataciòn) AS dias_en_empresa FROM Empleados
+)
+SELECT nombre, dias_en_empresa
+FROM AntiguedadEmpleados 
+WHERE dias_en_empresa > 1.825;
+4-------------------------------
+WITH VentasClientes AS (
+SELECT *
+FROM Ventas v
+JOIN Clientes c ON c.cliente_id = v.cliente_id
+WHERE v.fecha_venta >= DATE_SUB(NOW(), INTERVAL 1 YEAR) 
+)
+SELECT CONCAT(nombre, " ", apellido) AS nombreCompleto, COUNT(*) AS comprasUltimoAnio
+FROM VentasClientes
+GROUP BY cliente_id
+HAVING COUNT(*) > 3;
+5-------------------------------
+WITH TopSalarios AS (
+SELECT * FROM Empleados
+ORDER BY salario DESC
+LIMIT 10
+)
+SELECT nombre, salario
+FROM TopSalarios
+6-------------------------------
+WITH VentasPorMes AS (
+SELECT YEAR(fecha_ventas) as anio, MONTH(fecha_ventas) AS mes, SUM(valor) AS total_ventas
+FROM Ventas
+GROUP BY YEAR(fecha_ventas), MONTH(fecha_ventas) 
+HAVING SUM(valor) > 5000
+)
+SELECT * FORM VentasPorMes
+8-------------------------------
+WITH ClientesDuplicados AS (
+SELECT CONCAT(nombre, " ", apellido) AS nombreCompleto
+FROM Clientes
+)
+SELECT nombreCompleto
+FROM ClientesDuplicados
+GROUP BY nombreCompleto
+HAVING COUNT(nombreCompleto) > 1;
+
+9-------------------------------
+WITH TotalVentasPorCLientes AS (
+SELECT SUM(valor) AS TotalVentas, cliente_id
+FROM Ventas
+GROUP BY cliente_id
+),
+superiorDiezmil AS (
+SELECT TotalVentas, cliente_id
+FROM TotalVentasPorCLientes 
+WHERE TotalVentas > 10000
+)
+SELECT * FROM superiorDiezmil;
+10-------------------------------
+WITH VentasUltimoMes AS (
+    SELECT cliente_id, valor 
+    FROM Ventas
+    WHERE fecha_venta >= DATE_SUB(CURDATE(), INTERVAL 1 MONTH)
+)
+SELECT 
+    c.nombre, 
+    c.apellido, 
+    v.valor
+FROM VentasUltimoMes v
+JOIN Clientes c ON v.cliente_id = c.cliente_id;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

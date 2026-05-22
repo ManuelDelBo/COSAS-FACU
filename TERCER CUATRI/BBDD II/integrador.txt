@@ -1,0 +1,385 @@
+1--------------------------------------------------------------------
+DELIMITER//
+
+CREATE PROCEDURE reponerStockProducto(p_producto_id INT, p_cantidad INT) 
+BEGIN
+
+DECLARE v_exist INT;
+DECLARE v_stock_anterior INT;
+
+DECLARE EXIT HANDLER FOR SQLEXCEPTION
+BEGIN
+ ROLLBACK;
+ INSERT INTO Auditoria_Errores(procedimiento, operación, 
+             mensaje_error, fecha_error)
+ VALUES ('reponerStockProducto', 'UPDATE', 
+         'Error al reponer stock', NOW());
+END;
+
+START TRANSACTION;
+
+SELECT COUNT(*), stock 
+INTO v_exist, v_stock_anterior
+FROM Productos
+WHERE producto_id = p_producto_id;
+
+
+IF v_exist = 0 THEN
+ SIGNAL SQLSTATE '45000'
+ SET MESSAGE_TEXT = 'El producto no existe';
+ELSE
+ UPDATE Productos
+ SET stock = calcularNuevoStock(v_stock_anterior, p_cantidad)
+ WHERE productos_id = p_producto_id
+ 
+ COMMIT;
+
+ SELECT 'Stock actualizado correctamente' AS mensaje;
+END IF;
+
+END//
+DELIMITER;
+
+DELIMITER//
+CREATE FUNCTION calcularNuevoStock(p_stock INT, p_cantidad_reponer INT)
+RETURNS INT
+DETERMINISTIC
+BEGIN
+ RETURN (p_stock + p_cantidad_reponer);
+END//
+DELIMITER;
+2--------------------------------------------------------------------
+DELIMITER//
+CREATE FUNCTION calcularNuevoPrecio(v_precio_actiual DECIMAL(10, 2), v_porcentaje_aumento INT)
+RETURNS DECIMAL(10, 2)
+DETERMINISTIC
+NO SQL
+BEGIN
+ RETURN v_precio_actiual + (v_precio_actiual * v_porcentaje_aumento / 100); 
+END//
+DELIMITER;
+
+
+DELIMITER//
+
+CREATE PROCEDURE actualizarPrecioProducto(p_producto_id INT, p_porcentaje INT)
+BEGIN
+ DECLARE v_exist INT;
+ DECLARE v_precio DECIMAL(10,2);
+
+ DECLARE EXIT HANDLER FOR SQLEXCEPTION
+ BEGIN
+  ROLLBACK;
+  INSERT INTO Auditoria_Errores(procedimiento, operacion,
+                                mensaje_error, fecha_error)
+  VALUES ('actualizarPrecioProducto', 'UPDATE',
+          'Error al actualizar precio', NOW());
+ END;
+ 
+ START TRANSACTION;
+
+ SELECT COUNT(*), precio
+ INTO v_exist, v_precio
+ FROM Prodcutos
+ WHERE p_producto_id = producto_id;
+
+ IF v_exist = 0 THEN
+  SIGNAL SQLSTATE '45000'
+  SET MESSAGE_TEXT = 'El producto no existe.';
+ ELSE
+  UPDATE Productos
+  SET precio = calcularNuevoPrecio(v_precio, p_porcentaje)
+  WHERE producto_id = p_producto_id;
+  
+  COMMIT;
+
+  SELECT 'precio actualizado correctamente' AS mensaje;
+
+ END IF;
+
+END//
+
+DELIMITER;
+
+3--------------------------------------------------------------------
+CREATE VIEW vista_total_pedidos AS
+
+SELECT dp.pedido_id AS pedido_id, SUM(dp.cantidad * p.precio) AS total_pedido
+FROM Detalle_Pedido dp
+JOIN Productos p ON p.producto_id = dp.producto_id
+GROUP BY dp.pedido_id;
+
+
+DELIMITER//
+CREATE FUNCTION obtenerTotalPedido(p_pedido_id INT)
+RETURNS DECIMAL(10,2)
+NO DETERMINISTIC
+READS SQL DATA
+BEGIN
+ DECLARE v_total_pedido DECIMAL(10,2);
+
+ SELECT total_pedido 
+ INTO v_total_pedido
+ FROM vista_total_pedidos
+ WHERE pedido_id = p_pedido_id;
+
+ RETURN COALESCE(v_total_pedido, 0);
+
+END//
+DELIMITER;
+
+DELIMITER//
+CREATE PROCEDURE mostrarInfoPedido(p_pedido_id INT)
+BEGIN
+ DECLARE v_pedido_exist INT;
+
+ DECLARE EXIT HANDLER FOR SQLEXCEPTION
+  BEGIN
+   ROLLBACK;
+
+   INSERT INTO Auditoria_Errores(procedimiento, operacion,
+               mensaje_error, fecha_error)
+   VALUES('mostrarInfoPedido', 'SELECT', 'Error al coansultar pedido.', NOW());
+  END;
+
+ START TRANSACTION;
+
+ SELECT COUNT(*) INTO v_pedido_exist 
+ FROM Pedidos
+ WHERE pedido_id = p_pedido_id;
+
+
+ IF v_pedido_exist = 0 THEN
+  SIGNAL SQLSTATE '45000'
+  SET MESSAGE_TEXT = "El pedido es inexistente"
+ ELSE
+  SELECT p.pedido_id, p.fecha_pedido, 
+         CONCAT(c.nombre, " ", c.apellido) AS nombre_completo,
+         obtenerTotalPedido(p.pedido_id) AS total_pedido
+  FROM Pedidos p
+  JOIN Clientes c ON c.cliente_id = p.cliente_id
+  WHERE p.pedido_id = p_pedido_id;
+  
+  COMMIT;
+
+ END IF;
+
+END//
+
+DELIMITER;
+ 
+4--------------------------------------------------------------------
+DELIMITER//
+CREATE FUNCTION calcularStockRestante(p_stock INT, p_cantidad_pedida INT)
+RETURNS INT
+DETERMINISTIC
+NO SQL
+BEGIN
+ RETURN p_stock - p_cantidad_pedida;
+END//
+DELIMITER;
+
+
+DELIMITER//
+CREATE PROCEDURE registrarDetallePedido(p_detalle_id INT, p_pedido_id INT,                                         p_producto_id INT, p_cantidad INT)
+BEGIN
+ DECLARE v_pedido_exist INT;
+ DECLARE v_producto_exist INT;
+ DECLARE v_stock_actual INT;
+ DECLARE v_stock_nuevo INT;
+ 
+ DECLARE EXIT HANDLER FOR SQLEXCEPTION
+ BEGIN
+  ROLLBACK;
+  INSERT INTO Auditoria_Errores(procedimiento, operacion, 
+                                mensaje_error, fecha_error)
+  VALUES('registrarDetallePedido', 'INSERT', 'Error al insertar detalle.', NOW());
+ END;
+
+ START TRANSACTION;
+
+ SELECT COUNT(*),  
+ INTO v_pedido_exist
+ FROM Pedidos 
+ WHERE pedido_id = p_pedido_id;
+ 
+ SELECT COUNT(*), stock 
+ INTO v_producto_exist, v_stock_actual
+ FROM Productos 
+ WHERE producto_id = p_producto_id;
+
+ IF v_pedido_exist = 0 THEN
+  SIGNAL SQLSTATE '45000'
+  SET MESSAGE_TEXT = 'Pedido inexistente';
+
+ ELSEIF v_producto_exist = 0 THEN
+   SIGNAL SQLSTATE '45000'
+   SET MESSAGE_TEXT = 'Producto inexistente';
+
+ ELSEIF v_stock_actual < p_cantidad THEN
+   SIGNAL SQLSTATE '45000'
+   SET MESSAGE_TEXT = 'Stock insuficiente';
+
+ ELSE
+  SET v_stock_nuevo = calcularStockRestante(v_stock_actual, p_cantidad);
+
+  INSERT INTO Detalle_Pedido(detalle_id, pedido_id, producto_id, cantidad)
+  VALUES (p_detalle_id, p_pedido_id, p_producto_id, p_cantidad);
+
+  UPDATE Productos
+  SET stock = v_stock_nuevo
+  WHERE producto_id = p_producto_id;
+
+  COMMIT;
+
+  SELECT 'Detalle registrado y stock actualizado correctamente' AS mensaje;
+ END IF;
+
+ END//
+DELIMITER;
+
+5--------------------------------------------------------------------
+DELIMITER//
+
+CREATE PROCEDURE aplicarDescuentoCategoria(p_categoria VARCHAR(50))
+BEGIN
+ DECLARE v_categoria_exist INT;
+ DECLARE v_filas_actualizadas INT;
+ 
+ DECLARE EXIT HANDLER FOR SQLEXCEPTION
+ BEGIN
+  ROLLBACK;
+
+  INSERT INTO Auditoria_Errores (procedimiento, operacion, 
+                                 mensaje_error, fecha_error)
+  VALUES('aplicarDescuentoCategoria', 'UPDATE', 
+          'Error al intentar aplicar descuento.', NOW());
+
+
+  RESIGNAL;
+ END;
+ 
+ START TRANSACTION;
+
+ SELECT COUNT(*) INTO v_categoria_exist
+ FROM Productos
+ WHERE categoria = p_categoria
+
+
+ IF v_categoria_exist = 0 THEN
+  SIGNAL SQLSTATE '45000'
+  SET MESSAGE_TEXT = 'No existen productos de la categoria.';
+ ELSE
+  UPDATE Productos
+  SET precio = calcularNuevoPrecio(precio, -10)
+  WHERE categoria = p_categoria;
+ 
+  SET v_filas_actualizadas = ROW_COUNT();
+
+  INSERT INTO Auditoria_Operaciones(categoria, fecha_operacion,                                                         cantidad_productos_actualizados)
+  VALUES (p_categoria, NOW(), v_filas_actualizadas);
+  
+  COMMIT;
+  
+  SELECT 'Precios actualizados correctamente.' AS Mensaje;
+
+ END IF;
+
+END//
+
+DELIMITER;
+
+6--------------------------------------------------------------------
+
+DELIMITER//
+CREATE PROCEDURE notificarStockBajo(p_producto_id INT, p_stock_actual INT)
+BEGIN
+ INSERT INTO Alertas_Stock(producto_id, stock_actual, fecha_alerta)
+ VALUES (p_producto_id, p_stock_actual, NOW());
+END//
+DELIMITER;
+
+DELIMITER//
+CREATE PROCEDURE consultarStockProducto(p_prodcuto_id INT)
+BEGIN
+ DECLARE v_nombre VARCHAR(100);
+ DECLARE v_stock INT;
+ 
+ DECLARE EXIT HANDLER FOR NOT FOUND
+ BEGIN
+  INSERT INTO Auditoria_Errores(procedimiento, operacion, 
+                                mensaje_error, fecha_error)
+  VALUES(notificarStockBajo, 'SELECT', 
+         'Producto no encotrado', NOW());
+
+  SIGNAL SQLSTATE '45000'
+  SET MESSAGE_TEXT = 'Producto no encotrado'
+ END;
+
+ DECLARE EXIT HANDLER FOR SQLEXCEPTION
+ BEGIN
+  ROLLBACK;
+
+  INSERT INTO Auditoria_Errores(procedimiento, operacion, 
+                                mensaje_error, fecha_error)
+  VALUES(notificarStockBajo, 'SELECT', 
+         'Error al consultar stock de producto', NOW());
+
+  RESIGNAL;
+ END;
+
+ START TRANSACTION;
+
+ SELECT nombre_producto, stock 
+ INTO v_nombre, v_stock
+ FROM Prodcutos
+ WHERE prodcuto_id = p_prodcuto_id;
+
+
+ SELECT v_nombre_prodcuto AS nombre, v_stock AS stock;
+
+ IF v_stock_actual < 5 THEN
+  CALL notificarStockBajo(p_producto_id, v_stock_actual);
+ END IF;
+
+ COMMIT;
+
+ SELECT 'Producto encontrado' AS Mensaje;
+
+
+END//
+
+DELIMITER; 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
